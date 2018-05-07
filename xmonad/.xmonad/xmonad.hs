@@ -161,11 +161,11 @@ myKeymap conf =
     , ("M-x f", spawn "firefox")
 
     -- Take a note
-    , ("M-a", appendFilePrompt defaultXPConfig "/home/joakim/NOTES")
+    , ("M-a", appendFilePrompt def "/home/joakim/NOTES")
 
     -- Password bindings
-    , ("M-S-p", passPrompt defaultXPConfig)
-    , ("M-S-C-p", passGeneratePrompt defaultXPConfig)
+    , ("M-S-p", passPrompt def)
+    , ("M-S-C-p", passGeneratePrompt def)
 
     ---- Laptop function keys
     -- Blank screen
@@ -349,7 +349,7 @@ myEventHook = docksEventHook
 -- It will add EWMH logHook actions to your custom log hook by
 -- combining it with ewmhDesktopsLogHook.
 --
-myLogHook h = dynamicLogWithPP $ defaultPP
+myLogHook h = dynamicLogWithPP $ def
     {
         ppCurrent           =   dzenColor "#ebac54" "#1B1D1E" . pad
       , ppVisible           =   dzenColor "white" "#1B1D1E" . pad
@@ -425,7 +425,7 @@ main = do replace
 --
 -- No need to modify this.
 --
-defaults logBar = defaultConfig {
+defaults logBar = def {
       -- simple stuff
         terminal           = myTerminal,
         focusFollowsMouse  = myFocusFollowsMouse,
