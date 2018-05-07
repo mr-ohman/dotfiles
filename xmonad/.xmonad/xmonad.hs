@@ -147,7 +147,7 @@ myKeymap conf =
     , ("M-S-s", spawn "systemctl suspend")
 
     -- Switch to Openbox
-    , ("M-S-o", restart "/home/joakim/.xmonad/obtoxmd" True)
+    , ("M-S-o", restart "~/.xmonad/obtoxmd" True)
 
     -- Print screen
     , ("<Print>", spawn "scrot")
@@ -161,7 +161,7 @@ myKeymap conf =
     , ("M-x f", spawn "firefox")
 
     -- Take a note
-    , ("M-a", appendFilePrompt def "/home/joakim/NOTES")
+    , ("M-a", appendFilePrompt def "~/NOTES")
 
     -- Password bindings
     , ("M-S-p", passPrompt def)
@@ -172,7 +172,7 @@ myKeymap conf =
     , ("M-<F7>", spawn "sleep 0.2; xset dpms force off")
 
     -- Toggle touchpad
-    , ("M-<F8>", spawn "/home/joakim/.xmonad/trackpad-toggle.sh")
+    , ("M-<F8>", spawn "~/.xmonad/trackpad-toggle.sh")
 
     -- Decrease backlight
     , ("<XF86MonBrightnessDown>", spawn "xbacklight -dec 2")
@@ -406,7 +406,7 @@ myXmonadBar =
 myStatusBar =
   let x = "860"
       w = "860"
-  in  unwords [ "conky -c /home/joakim/.xmonad/conky_dzen | dzen2"
+  in  unwords [ "conky -c ~/.xmonad/conky_dzen | dzen2"
               , "-x '" ++ x ++ "' -y '0' -w '" ++ w ++ "' -h '24' -ta 'r'"
               , "-bg '#1B1D1E' -fg '#FFFFFF' -e 'onstart=lower'"
               ]
