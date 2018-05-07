@@ -17,6 +17,7 @@ import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Reflect
 import XMonad.Layout.Tabbed
 import XMonad.Layout.TwoPane
+import XMonad.Layout.ToggleLayouts
 
 import XMonad.Util.EZConfig
 import XMonad.Util.Replace
@@ -71,6 +72,9 @@ myKeymap conf =
 
     -- Rotate through the available layout algorithms
     , ("M-<Space>", sendMessage NextLayout)
+
+    --  Reset the layouts on the current workspace to default
+    , ("M-C-<Space>", sendMessage ToggleLayout)
 
     --  Reset the layouts on the current workspace to default
     , ("M-S-<Space>", setLayout $ XMonad.layoutHook conf)
@@ -266,7 +270,7 @@ myLayout = smartBorders $ defaultLayout
                    editorLayout ||| browserLayout ||| noBorders Full)
 
     -- browser Layout
-    browserLayout = combineTwo (TwoPane delta 0.8) browserTiled Full
+    browserLayout = toggleLayouts (combineTwo (TwoPane delta 0.8) browserTiled Full) (noBorders Full)
 
     -- editor Layout
     editorLayout = FixedColumn 1 20 84 10
