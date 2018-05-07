@@ -1,0 +1,6 @@
+URxvt.foreground: white
+URxvt.background: #111111
+URxvt.font: xft:monospace:size=10
+URxvt.scrollBar: off
+
+dzen2.font:xft:monospace:size=12
