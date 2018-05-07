@@ -123,7 +123,7 @@ myKeymap conf =
     , ("M-S-q", io (exitWith ExitSuccess))
 
     -- Restart xmonad
-    , ("M-q", spawn "xmonad --recompile; xmonad --restart")
+    , ("M-q", spawn "killall dzen2; ~/.xmonad/build.sh; xmonad --restart")
 
     -- Toggle mute
     , ("<XF86AudioMute>", spawn "amixer set Master toggle")
