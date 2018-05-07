@@ -270,7 +270,9 @@ myLayout = smartBorders $ defaultLayout
                    editorLayout ||| browserLayout ||| noBorders Full)
 
     -- browser Layout
-    browserLayout = toggleLayouts (combineTwo (TwoPane delta 0.8) browserTiled Full) (noBorders Full)
+    browserLayout =
+      toggleLayouts (noBorders Full)
+                    (combineTwo (TwoPane delta 0.8) browserTiled Full)
 
     -- editor Layout
     editorLayout = FixedColumn 1 20 84 10
