@@ -194,10 +194,12 @@ myKeymap conf =
     -- mod-[1..9], Switch to workspace N
     -- mod-shift-[1..9], Move client to workspace N
     --
-    let workspaceKeys = ["1","2","3","4","5","6","7","8","9","0","-","="]
-    in  [("M-" ++ m ++ k, windows $ f i)
-          | (i, k) <- zip (XMonad.workspaces conf) workspaceKeys
+    [("M-" ++ m ++ k, windows $ f i)
+          | (i, k) <- zip (XMonad.workspaces conf) myWorkspaces
           , (f, m) <- [(W.greedyView, ""), (W.shift, "S-")]]
+    ++ [ ("M-+", windows $ W.greedyView (myWorkspaces !! 10))
+       , ("M-S-+", windows $ W.shift (myWorkspaces !! 10))
+       ]
     ++
 
     --
@@ -440,6 +442,11 @@ defaults logBar = defaultConfig {
         logHook            = myLogHook logBar,
         startupHook        = myStartupHook
     }
+    `additionalKeys`
+    -- Fix for dead acute not being in EZConfig
+    [ ((myModMask, xK_dead_acute) , windows $ W.greedyView (myWorkspaces !! 11))
+    , ((myModMask .|. shiftMask, xK_dead_acute) , windows $ W.shift (myWorkspaces !! 11))
+    ]
 
 ------------------------------------------------------------------------
 -- Extra utils

@@ -1,13 +1,24 @@
 #!/bin/bash
 
+# Set DPI
+xrandr --dpi 120
+
 # Set up tray
 (sleep 1 && trayer --edge top --align right --SetDockType true \
                    --SetPartialStrut true --expand true --widthtype pixel \
                    --width 200 --transparent true --tint 0x000000 --height 24) &
 
+# Set background
+source $HOME/.fehbg
+
+# Setup X resources
+xrdb ~/.Xresources
+
+# Setup keyboard
+setxkbmap -option ctrl:nocaps -layout "us,se" -option grp:rctrl_toggle
+
 # Setup cursor
 xsetroot -cursor_name left_ptr
-setxkbmap -option ctrl:nocaps
 unclutter -root -idle 3 &
 
 # Start screensaver deamon
