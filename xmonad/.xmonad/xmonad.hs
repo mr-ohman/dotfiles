@@ -279,14 +279,15 @@ myLayout = smartBorders $ defaultLayout
 
     -- default tiling algorithm partitions the screen into two panes
     tiled        = Tall 1 delta ratio
-    browserTiled = let ratioTabs = 194/200
-                   in  reflectVert (Mirror (Tall 1 (1/200) ratioTabs))
+    browserTiled = reflectVert (Mirror (Tall 1 deltaTabs ratioTabs))
 
     -- Default proportion of screen occupied by master pane
-    ratio   = 1/2
+    ratio     = 1/2
+    ratioTabs = 194/200
 
     -- Percent of screen to increment by when resizing panes
-    delta   = 3/100
+    delta     = 3/100
+    deltaTabs = 1/200
 
 ------------------------------------------------------------------------
 -- Window rules:
