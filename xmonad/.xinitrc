@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Set DPI
-xrandr --dpi 120
-
 # Set up tray
 (sleep 1 && trayer --edge top --align right --SetDockType true \
                    --SetPartialStrut true --expand true --widthtype pixel \
@@ -15,7 +12,7 @@ source $HOME/.fehbg
 xrdb ~/.Xresources
 
 # Setup keyboard
-setxkbmap -option ctrl:nocaps -layout "us,se" -option grp:rctrl_toggle
+setxkbmap -layout "us,se" -option grp:rctrl_toggle,ctrl:nocaps
 
 # Setup cursor
 xsetroot -cursor_name left_ptr

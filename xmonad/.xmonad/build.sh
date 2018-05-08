@@ -16,7 +16,9 @@ fi
 if [ ! -d .cabal-sandbox ]; then
   cabal sandbox init
   cabal install xmonad xmonad-contrib
-  stow -t $HOME/.bin .cabal-sandbox/bin
+  cd .cabal-sandbox
+  stow -t $HOME/.bin bin
+  cd ..
 fi
 
 # Build the xmonad config
