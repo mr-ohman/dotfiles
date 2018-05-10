@@ -73,7 +73,7 @@ myKeymap conf =
     -- Rotate through the available layout algorithms
     , ("M-<Space>", sendMessage NextLayout)
 
-    --  Reset the layouts on the current workspace to default
+    --  Toggle a togglable layout
     , ("M-C-<Space>", sendMessage ToggleLayout)
 
     --  Reset the layouts on the current workspace to default
@@ -156,7 +156,7 @@ myKeymap conf =
     , ("C-<Print>", spawn "sleep 0.2; scrot -s")
 
     -- Launch application
-    , ("M-x e", spawn "emacsclient -c -a \"\"")
+    , ("M-x e", spawn "emacs")
     , ("M-x c", spawn "chromium")
     , ("M-x f", spawn "firefox")
 
@@ -198,12 +198,13 @@ myKeymap conf =
     -- mod-[1..9], Switch to workspace N
     -- mod-shift-[1..9], Move client to workspace N
     --
-    [("M-" ++ m ++ k, windows $ f i)
+    [ ("M-" ++ m ++ k, windows $ f i)
           | (i, k) <- zip (XMonad.workspaces conf) myWorkspaces
           , (f, m) <- [(W.greedyView, ""), (W.shift, "S-")]]
-    ++ [ ("M-+", windows $ W.greedyView (myWorkspaces !! 10))
-       , ("M-S-+", windows $ W.shift (myWorkspaces !! 10))
-       ]
+    ++
+    [ ("M-+", windows $ W.greedyView (myWorkspaces !! 10))
+    , ("M-S-+", windows $ W.shift (myWorkspaces !! 10))
+    ]
     ++
 
     --
