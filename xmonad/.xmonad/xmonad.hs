@@ -156,9 +156,16 @@ myKeymap conf =
     , ("C-<Print>", spawn "sleep 0.2; scrot -s")
 
     -- Launch application
+    , ("M-x w", spawn "chromium")
     , ("M-x e", spawn "emacs")
-    , ("M-x c", spawn "chromium")
-    , ("M-x f", spawn "firefox")
+    , ("M-x r", spawn "evince")
+    , ("M-x t", spawn "lxtask")
+
+    -- Set display with xrandr
+    , ("M-d s", spawn "xrandr --output DP1 --primary --auto --output eDP1 --right-of DP1 --auto")
+    , ("M-d m", spawn "xrandr --output DP1 --auto --output eDP1 --auto")
+    , ("M-d i", spawn "xrandr --output DP1 --off --output eDP1 --auto")
+    , ("M-d e", spawn "xrandr --output DP1 --auto --output eDP1 --off")
 
     -- Take a note
     , ("M-a", appendFilePrompt def "~/NOTES")
