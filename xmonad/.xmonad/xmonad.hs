@@ -162,10 +162,13 @@ myKeymap conf =
     , ("M-x t", spawn "lxtask")
 
     -- Set display with xrandr
-    , ("M-d s", spawn "xrandr --output DP1 --primary --auto --output eDP1 --right-of DP1 --auto")
-    , ("M-d m", spawn "xrandr --output DP1 --auto --output eDP1 --auto")
     , ("M-d i", spawn "xrandr --output DP1 --off --output eDP1 --auto")
     , ("M-d e", spawn "xrandr --output DP1 --auto --output eDP1 --off")
+    , ("M-d m", spawn "xrandr --output DP1 --auto --output eDP1 --auto")
+    , ("M-d l", spawn "xrandr --output DP1 --primary --auto --output eDP1 --left-of DP1 --auto")
+    , ("M-d r", spawn "xrandr --output DP1 --primary --auto --output eDP1 --right-of DP1 --auto")
+    , ("M-d a", spawn "xrandr --output DP1 --primary --auto --output eDP1 --above DP1 --auto")
+    , ("M-d b", spawn "xrandr --output DP1 --primary --auto --output eDP1 --below DP1 --auto")
 
     -- Take a note
     , ("M-a", appendFilePrompt def "~/NOTES")
