@@ -412,7 +412,7 @@ myStartupHook = setWMName "LG3D"
 myXmonadBar =
   let w = "860"
   in  unwords [ "dzen2 -x '0' -y '0' -h '24' -w '" ++ w ++ "' -ta 'l'"
-              , "-fg '#FFFFFF' -bg '#1B1D1E' -e 'onstart=lower'"
+              , "-fg '#FFFFFF' -bg '#1B1D1E' -e 'onstart=lower' -dock"
               ]
 
 myStatusBar =
@@ -420,7 +420,7 @@ myStatusBar =
       w = "860"
   in  unwords [ "conky -c ~/.xmonad/conky_dzen | dzen2"
               , "-x '" ++ x ++ "' -y '0' -w '" ++ w ++ "' -h '24' -ta 'r'"
-              , "-bg '#1B1D1E' -fg '#FFFFFF' -e 'onstart=lower'"
+              , "-bg '#1B1D1E' -fg '#FFFFFF' -e 'onstart=lower' -dock"
               ]
 
 ------------------------------------------------------------------------
