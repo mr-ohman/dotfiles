@@ -5,21 +5,26 @@ out_to_x no
 text_buffer_size 512
 update_interval 1
 
+## Download/upload speed
 # ^fg(\#00aa4a) ^i($HOME/.xmonad/xbm-icons/net_down_03.xbm) ${downspeed wlp4s0} \
 # ^fg(\#ff3333) ^i($HOME/.xmonad/xbm-icons/net_up_03.xbm) ${upspeed wlp4s0} \
 
+## Mail notification
 # ${if_match ${execi 60 notmuch count tag:inbox and tag:unread} <= 0}${else} \
 # ^ca(1,emacs -f notmuch)^fg(\#ff0000)^i($HOME/.xmonad/xbm-icons/mail.xbm) \
 # ${execi 60 notmuch count tag:inbox and tag:unread}^ca()${endif} \
 
+## Local temprature
+# ^i($HOME/.xmonad/xbm-icons/temp.xbm) \
+# ${execi 600 $HOME/scripts/weather.sh} \
+
 TEXT
-^ca(1,lxtask)^fg(\#ffffff)^i($HOME/.xmonad/xbm-icons/cpu.xbm) ${cpu}%^ca() \
-^ca(1,dmenu_run)^i($HOME/.xmonad/xbm-icons/mem.xbm) ${memperc}%^ca() \
+^fg(\#ffffff)^i($HOME/.xmonad/xbm-icons/cpu.xbm) ${cpu}% \
+^i($HOME/.xmonad/xbm-icons/mem.xbm) ${memperc}% \
 ^i($HOME/.xmonad/xbm-icons/temp.xbm) ${hwmon 1 temp 1}°C \
 ^fg(\#00ffff) ^i($HOME/.xmonad/xbm-icons/vol-hi.xbm) \
 ${exec amixer get Master | egrep -o "[0-9]+%" | head -1 | egrep -o "[0-9]*"}% \
-^fg(\#ff77ff) ^i($HOME/.xmonad/xbm-icons/bat_empty_02.xbm) ${battery_percent}% - \
-${format_time $battery_time "(\hh)\mm"} \
-^fg(\#ebac54) ^i($HOME/.xmonad/xbm-icons/temp.xbm) \
-${execi 600 $HOME/scripts/weather.sh} \
-^i($HOME/.xmonad/xbm-icons/clock.xbm) ${time %d-%m-%Y  %R}
+${if_match $battery_short == "F"}${else} \
+^fg(\#ff77ff) ^i($HOME/.xmonad/xbm-icons/bat_empty_02.xbm) ${battery_percent}% \
+- ${format_time $battery_time "(\hh)\mm"}${endif} \
+^fg(\#ebac54) ^i($HOME/.xmonad/xbm-icons/clock.xbm) ${time %d-%m-%Y  %R}
