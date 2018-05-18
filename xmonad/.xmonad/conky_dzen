@@ -24,7 +24,7 @@ TEXT
 ^i($HOME/.xmonad/xbm-icons/temp.xbm) ${hwmon 1 temp 1}°C \
 ^fg(\#00ffff) ^i($HOME/.xmonad/xbm-icons/vol-hi.xbm) \
 ${exec amixer get Master | egrep -o "[0-9]+%" | head -1 | egrep -o "[0-9]*"}% \
-${if_match $battery_short == "F"}${else} \
+${if_match $battery_percent <= 95} \
 ^fg(\#ff77ff) ^i($HOME/.xmonad/xbm-icons/bat_empty_02.xbm) ${battery_percent}% \
 - ${format_time $battery_time "(\hh)\mm"}${endif} \
 ^fg(\#ebac54) ^i($HOME/.xmonad/xbm-icons/clock.xbm) ${time %d-%m-%Y  %R}
