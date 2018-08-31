@@ -5,7 +5,7 @@ cabal-version:       >=1.10
 
 executable myxmonad
   main-is:             xmonad.hs
-  build-depends:       base >=4.10 && <4.11,
+  build-depends:       base,
                        xmonad,
                        xmonad-contrib,
                        containers,

@@ -18,6 +18,7 @@ import XMonad.Layout.Reflect
 import XMonad.Layout.Tabbed
 import XMonad.Layout.TwoPane
 import XMonad.Layout.ToggleLayouts
+import XMonad.Layout.Renamed
 
 import XMonad.Util.EZConfig
 import XMonad.Util.Replace
@@ -28,6 +29,7 @@ import XMonad.Prompt.AppendFile
 import XMonad.Prompt.Pass
 
 import XMonad.Hooks.UrgencyHook
+import XMonad.Hooks.EwmhDesktops
 
 import qualified XMonad.StackSet as W
 
@@ -55,6 +57,15 @@ myNormalBorderColor  = "#dddddd"
 myFocusedBorderColor = "#ff0000"
 
 myWorkspaces = ["1","2","3","4","5","6","7","8","9","0","-","="]
+
+myTabTheme =
+  def { activeColor         = "#1b1d1e"
+      , inactiveColor       = "#1b1d1e"
+      , activeBorderColor   = myFocusedBorderColor
+      , inactiveBorderColor = myNormalBorderColor
+      , activeTextColor     = "#ffffff"
+      , inactiveTextColor   = "#ffffff"
+      }
 
 ------------------------------------------------------------------------
 -- Key bindings. Add, modify or remove key bindings here.
@@ -144,7 +155,7 @@ myKeymap conf =
     , ("M-S-z", spawn "xscreensaver-command -lock")
 
     -- Suspend system
-    , ("M-S-s", spawn "systemctl suspend")
+    , ("M-S-s", spawn "systemctl suspend -i")
 
     -- Switch to Openbox
     , ("M-S-o", restart "~/.xmonad/obtoxmd" True)
@@ -156,7 +167,7 @@ myKeymap conf =
     , ("C-<Print>", spawn "sleep 0.2; scrot -s")
 
     -- Launch application
-    , ("M-x w", spawn "chromium")
+    , ("M-x w", spawn "firefox")
     , ("M-x e", spawn "emacs")
     , ("M-x r", spawn "evince")
     , ("M-x t", spawn "lxtask")
@@ -277,28 +288,17 @@ myLayout = smartBorders $ defaultLayout
   where
     -- default Layout
     defaultLayout =
-      avoidStruts (tiled ||| Mirror tiled ||| simpleTabbed ||| Grid |||
-                   editorLayout ||| browserLayout ||| noBorders Full)
-
-    -- browser Layout
-    browserLayout =
-      toggleLayouts (noBorders Full)
-                    (combineTwo (TwoPane delta 0.8) browserTiled Full)
-
-    -- editor Layout
-    editorLayout = FixedColumn 1 20 84 10
+      avoidStruts (renamed [Replace "Tiled"] tiled |||
+                   renamed [Replace "Mirror"] (Mirror tiled) |||
+                   renamed [Replace "Tabbed"] (tabbed shrinkText myTabTheme) |||
+                   renamed [Replace "Editor"] editorLayout |||
+                   noBorders Full)
 
     -- default tiling algorithm partitions the screen into two panes
-    tiled        = Tall 1 delta ratio
-    browserTiled = reflectVert (Mirror (Tall 1 deltaTabs ratioTabs))
+    tiled        = Tall 1 (3/100) (1/2)
 
-    -- Default proportion of screen occupied by master pane
-    ratio     = 1/2
-    ratioTabs = 194/200
-
-    -- Percent of screen to increment by when resizing panes
-    delta     = 3/100
-    deltaTabs = 1/200
+    -- editor layout
+    editorLayout = reflectHoriz $ FixedColumn 1 20 164 10
 
 ------------------------------------------------------------------------
 -- Window rules:
@@ -372,11 +372,7 @@ myLogHook h = dynamicLogWithPP $ def
       , ppUrgent            =   dzenColor "#37C0F4" "#1B1D1E" . pad
       , ppWsSep             =   " "
       , ppSep               =   "  |  "
-      , ppLayout            =   dzenColor "#ebac54" "#1B1D1E" .
-                                (\x -> case x of
-                                    "combining ReflectY Mirror Tall and Full with TwoPane" -> "Browser"
-                                    _ -> x
-                                )
+      , ppLayout            =   dzenColor "#ebac54" "#1B1D1E"
       , ppTitle             =   (" " ++) . dzenColor "white" "#1B1D1E" . dzenEscape
       , ppOutput            =   hPutStrLn h
     }
@@ -439,7 +435,7 @@ main = do replace
 --
 -- No need to modify this.
 --
-defaults logBar = def {
+defaults logBar = ewmh $ def {
       -- simple stuff
         terminal           = myTerminal,
         focusFollowsMouse  = myFocusFollowsMouse,

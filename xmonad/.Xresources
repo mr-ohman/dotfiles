@@ -1,10 +1,10 @@
-URxvt.foreground: #DDDDDD
-URxvt.background: #000000
-URxvt.font: xft:monospace:size=11
+URxvt.foreground: #DCDCCC
+URxvt.background: #313131
+URxvt.font: xft:Mono:pixelsize=15
 URxvt.scrollBar: off
 
-URxvt.inheritPixmap: true
-URxvt.tintColor: white
-URxvt.shading: 22
+! URxvt.inheritPixmap: true
+! URxvt.tintColor: white
+! URxvt.shading: 22
 
 dzen2.font:xft:monospace:size=12
