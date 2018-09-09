@@ -8,6 +8,8 @@ update_interval 1
 ## Download/upload speed
 # ^fg(\#00aa4a) ^i($HOME/.xmonad/xbm-icons/net_down_03.xbm) ${downspeed wlp4s0} \
 # ^fg(\#ff3333) ^i($HOME/.xmonad/xbm-icons/net_up_03.xbm) ${upspeed wlp4s0} \
+# ^fg(\#ff77ff)^i($HOME/.xmonad/xbm-icons/net_down_03.xbm) ${totaldown wlp4s0} \
+# ^i($HOME/.xmonad/xbm-icons/net_up_03.xbm) ${totalup wlp4s0} \
 
 ## Mail notification
 # ${if_match ${execi 60 notmuch count tag:inbox and tag:unread} <= 0}${else} \
@@ -19,6 +21,8 @@ update_interval 1
 # ${execi 600 $HOME/scripts/weather.sh} \
 
 TEXT
+${if_match "${mpd_status}" == "Playing"}^fg(\#ffff77)\
+^i($HOME/.xmonad/xbm-icons/note.xbm) ${scroll 20 ${mpd_smart}}${endif} \
 ^fg(\#ffffff)^i($HOME/.xmonad/xbm-icons/cpu.xbm) ${cpu}% \
 ^i($HOME/.xmonad/xbm-icons/mem.xbm) ${memperc}% \
 ^i($HOME/.xmonad/xbm-icons/temp.xbm) ${hwmon 1 temp 1}°C \

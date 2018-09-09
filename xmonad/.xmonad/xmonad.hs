@@ -1,41 +1,7 @@
 
-import XMonad
-
-import XMonad.Actions.NoBorders
-import XMonad.Actions.CopyWindow
-
-import XMonad.Hooks.DynamicLog
-import XMonad.Hooks.ManageDocks
-import XMonad.Hooks.ManageHelpers
-import XMonad.Hooks.SetWMName
-
-import XMonad.Layout.Combo
-import XMonad.Layout.FixedColumn
-import XMonad.Layout.NoBorders
-import XMonad.Layout.Grid
-import XMonad.Layout.PerWorkspace
-import XMonad.Layout.Reflect
-import XMonad.Layout.Tabbed
-import XMonad.Layout.TwoPane
-import XMonad.Layout.ToggleLayouts
-import XMonad.Layout.Renamed
-
-import XMonad.Util.EZConfig
-import XMonad.Util.Replace
-import XMonad.Util.Run
-
-import XMonad.Prompt
-import XMonad.Prompt.AppendFile
-import XMonad.Prompt.Pass
-
-import XMonad.Hooks.UrgencyHook
-import XMonad.Hooks.EwmhDesktops
-
-import qualified XMonad.StackSet as W
+import Control.Monad
 
 import qualified Data.Map        as M
-
-import Control.Monad
 
 import Graphics.X11.ExtraTypes.XF86
 import Graphics.X11.ExtraTypes.XorgDefault
@@ -44,198 +10,298 @@ import System.Exit
 import System.IO
 import System.Posix.Unistd
 
-------------------------------------------------------------------------
--- Standard settings
---
-myTerminal      = "urxvt"
-myModMask       = mod4Mask
+import XMonad hiding ( (|||) )
+import qualified XMonad.StackSet as W
 
-myFocusFollowsMouse = False
+import XMonad.Actions.CopyWindow
+import XMonad.Actions.NoBorders
+import XMonad.Actions.DynamicProjects
+import XMonad.Actions.DynamicWorkspaces
+import XMonad.Actions.SpawnOn
+import qualified XMonad.Actions.DynamicWorkspaceOrder as DO
+import XMonad.Actions.CycleWS
+import XMonad.Actions.WithAll
+
+import XMonad.Hooks.DynamicLog
+import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.ManageDocks
+import XMonad.Hooks.ManageHelpers
+import XMonad.Hooks.SetWMName
+import XMonad.Hooks.UrgencyHook
+
+import XMonad.Layout.FixedColumn
+import XMonad.Layout.NoBorders
+import XMonad.Layout.PerWorkspace
+import XMonad.Layout.Reflect
+import XMonad.Layout.Renamed
+import XMonad.Layout.Tabbed
+import XMonad.Layout.LayoutCombinators
+
+import XMonad.Prompt
+import XMonad.Prompt.AppendFile
+import XMonad.Prompt.Pass
+import XMonad.Prompt.ConfirmPrompt
+
+import XMonad.Util.EZConfig
+import XMonad.Util.Replace
+import XMonad.Util.Run
+
+
+------------------------------------------------------------------------
+-- Application settings
+------------------------------------------------------------------------
+
+myTerminal      = "urxvt"
+myLauncher      = "rofi -matching fuzzy -show run"
+myEditor        = "emacs"
+myWebBrowser    = "firefox"
+myFileBrowser   = "thunar"
+myPDFReader     = "evince"
+myTaskManager   = "lxtask"
+
+------------------------------------------------------------------------
+-- Theme settings
+------------------------------------------------------------------------
+
+softblack = "#1b1d1e"
+darkgray  = "#313131"
+gray      = "#7b7b7b"
+white     = "#ffffff"
+softwhite = "#dddddd"
+red       = "#ff0000"
+orange    = "#ebac54"
+
+myFont    = "xft:Mono:pixelsize=15"
+
+barHeight = 24
+barWidth  = 860
 
 myBorderWidth   = 1
-myNormalBorderColor  = "#dddddd"
-myFocusedBorderColor = "#ff0000"
+myNormalBorderColor  = softwhite
+myFocusedBorderColor = orange
+myFocusFollowsMouse = False
 
-myWorkspaces = ["1","2","3","4","5","6","7","8","9","0","-","="]
+myLogHook h = dynamicLogWithPP $ def
+  { ppCurrent         = dzenColor orange softblack . pad
+  , ppVisible         = dzenColor white softblack . pad
+  , ppHidden          = dzenColor white softblack . pad
+  , ppHiddenNoWindows = dzenColor gray softblack . pad
+  , ppUrgent          = dzenColor "#37C0F4" softblack . pad
+  , ppWsSep           = " "
+  , ppSep             = "  |  "
+  , ppLayout          = dzenColor orange softblack
+  , ppTitle           = (" " ++) . dzenColor white softblack . dzenEscape
+  , ppOutput          = hPutStrLn h
+  , ppSort            = DO.getSortByOrder
+  }
 
-myTabTheme =
-  def { activeColor         = "#1b1d1e"
-      , inactiveColor       = "#1b1d1e"
-      , activeBorderColor   = myFocusedBorderColor
-      , inactiveBorderColor = myNormalBorderColor
-      , activeTextColor     = "#ffffff"
-      , inactiveTextColor   = "#ffffff"
-      }
+myTabTheme = def
+  { fontName            = myFont
+  , activeColor         = darkgray
+  , inactiveColor       = softblack
+  , activeBorderColor   = orange
+  , inactiveBorderColor = softwhite
+  , activeTextColor     = orange
+  , inactiveTextColor   = white
+  }
+
+myPromptTheme = def
+  { font              = myFont
+  , bgColor           = softblack
+  , fgColor           = white
+  , fgHLight          = orange
+  , bgHLight          = darkgray
+  , borderColor       = orange
+  , promptBorderWidth = myBorderWidth
+  , height            = barHeight
+  , position          = Bottom
+  }
+
+hotPromptTheme = myPromptTheme
+  { bgColor          = orange
+  , fgColor          = softblack
+  , borderColor      = softblack
+  }
+
+myXmonadBar = "dzen2 -x '0' -y '0' -ta 'l'" ++ myCommonBar
+
+myStatusBar =
+  concat [ "conky -c ~/.xmonad/conky_dzen | dzen2"
+         , " -x '", show barWidth, "'"
+         , " -y '0' -ta 'r'"
+         ] ++ myCommonBar
+
+myCommonBar =
+  concat [ " -w '", show barWidth, "'"
+         , " -h '", show barHeight, "'"
+         , " -fg '", white, "'"
+         , " -bg '", softblack, "'"
+         , " -e 'onstart=lower' -dock"
+         ]
 
 ------------------------------------------------------------------------
--- Key bindings. Add, modify or remove key bindings here.
---
+-- Projects and workspaces
+------------------------------------------------------------------------
+
+startingWorkspaces = ["."]
+
+projects =
+  [ Project { projectName = "WEB"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ spawnOn "WEB" myWebBrowser
+            }
+  , Project { projectName = "EDT"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ do spawnOn "EDT" myEditor
+                                           spawnOn "EDT" myTerminal
+                                           spawnOn "EDT" myTerminal
+                                           spawnOn "EDT" myTerminal
+            }
+  , Project { projectName = "COM"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ spawnOn "COM" "telegram-desktop"
+            }
+  , Project { projectName = "STM"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ spawnOn "STM" "steam"
+            }
+  , Project { projectName = "SYS"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ do spawnOn "SYS" myTerminal
+                                           spawnOn "SYS" myTerminal
+            }
+  ]
+
+------------------------------------------------------------------------
+-- Key bindings
+------------------------------------------------------------------------
+
+myModMask = mod4Mask
+
+wsKeys = map (:[]) ['1'..'9'] ++ ["0","-","="]
+
+myKeys conf = mkKeymap conf $ myKeymap conf
 myKeymap conf =
+  -- M-q, [q]uit or restart xmonad
+  [ ("M-q q", confirmPrompt hotPromptTheme "quit xmonad" $ quitXmonad)
+  , ("M-q r", restartXmonad)
+  , ("M-q S-r", rebuildXmonad)
+  , ("M-q o", restart "~/.xmonad/obtoxmd" True)
 
-    -- launch a terminal
-    [ ("M-S-<Return>", spawn $ XMonad.terminal conf)
+  -- M-s, [s]ystem
+  , ("M-s z", spawn "xscreensaver-command -lock")
+  , ("M-s s", spawn "systemctl suspend -i")
 
-    -- launch dmenu
-    , ("M-p", spawn "dmenu_run")
+  -- M-x, e[x]ecute program
+  , ("M-x x", spawn myLauncher)
+  , ("M-x t", spawn myTerminal)
+  , ("M-x w", spawn myWebBrowser)
+  , ("M-x e", spawn myEditor)
+  , ("M-x r", spawn myPDFReader)
+  , ("M-x t", spawn myTaskManager)
+  , ("M-x f", spawn myFileBrowser)
 
-    -- close focused window
-    , ("M-S-c", kill)
+  -- M-w, [w]indow management
+  , ("M-w x", kill)
+  , ("M-w S-x", confirmPrompt hotPromptTheme "kill all" $ killAll)
+  , ("M-w r", refresh)  -- Resize viewed windows to the correct size
+  , ("M-w k", windows W.swapUp)
+  , ("M-w j", windows W.swapDown)
+  , ("M-w t", withFocused $ windows . W.sink)
+  , ("M-w m", windows W.swapMaster)
+  , ("M-w b", withFocused toggleBorder)
+  , ("M-w c", windows copyToAll)
+  , ("M-w d", killAllOtherCopies)
 
-    -- Rotate through the available layout algorithms
-    , ("M-<Space>", sendMessage NextLayout)
+  -- M-S-w, [w]orkspaces
+  , ("M-S-w r", renameProjectPrompt myPromptTheme)
+  , ("M-S-w d", changeProjectDirPrompt myPromptTheme)
 
-    --  Toggle a togglable layout
-    , ("M-C-<Space>", sendMessage ToggleLayout)
+  -- M-l, [l]ayout management
+  , ("M-l k", sendMessage NextLayout)
+  , ("M-l h", sendMessage Shrink)
+  , ("M-l l", sendMessage Expand)
+  , ("M-l w", sendMessage $ IncMasterN 1)
+  , ("M-l d", sendMessage $ IncMasterN (-1))
 
-    --  Reset the layouts on the current workspace to default
-    , ("M-S-<Space>", setLayout $ XMonad.layoutHook conf)
+  -- M-m, [m]usic
+  , ("M-m p", spawn "mpc toggle")
+  , ("<XF86AudioPlay>", spawn "mpc toggle")
+  , ("M-m j", spawn "mpc next")
+  , ("M-m k", spawn "mpc prev")
 
-    -- Resize viewed windows to the correct size
-    , ("M-n", refresh)
+  -- M-d, [d]isplay
+  , ("M-d i", spawn "xrandr --output DP1 --off --output eDP1 --auto")
+  , ("M-d e", spawn "xrandr --output DP1 --auto --output eDP1 --off")
+  , ("M-d m", spawn "xrandr --output DP1 --auto --output eDP1 --auto")
+  , ("M-d l", spawn "xrandr --output DP1 --primary --auto --output eDP1 --left-of DP1 --auto")
+  , ("M-d r", spawn "xrandr --output DP1 --primary --auto --output eDP1 --right-of DP1 --auto")
+  , ("M-d a", spawn "xrandr --output DP1 --primary --auto --output eDP1 --above DP1 --auto")
+  , ("M-d b", spawn "xrandr --output DP1 --primary --auto --output eDP1 --below DP1 --auto")
 
-    -- Move focus to the next window
-    , ("M-<Tab>", windows W.focusDown)
-    , ("M-k", windows W.focusDown)
+  -- M-p, [p]assword
+  , ("M-p p", passPrompt myPromptTheme)
+  , ("M-p g", passGeneratePrompt myPromptTheme)
 
-    -- Move focus to the previous window
-    , ("M-j", windows W.focusUp)
+  -- misc system
+  , ("<XF86AudioMute>",        spawn "amixer set Master toggle")
+  , ("M-<Up>",                 spawn "amixer set Master 2%+")
+  , ("<XF86AudioRaiseVolume>", spawn "amixer set Master 2%+")
+  , ("M-<Down>",               spawn "amixer set Master 2%-")
+  , ("<XF86AudioLowerVolume>", spawn "amixer set Master 2%-")
 
-    -- Move focus to the master window
-    , ("M-m", windows W.focusMaster)
+  , ("M-<F7>", spawn "sleep 0.2; xset dpms force off")
+  , ("M-<F8>", spawn "~/.xmonad/trackpad-toggle.sh")
+  , ("<XF86MonBrightnessDown>", spawn "xbacklight -dec 2")
+  , ("<XF86MonBrightnessUp>",   spawn "xbacklight -inc 2")
 
-    -- Swap the focused window and the master window
-    , ("M-<Return>", windows W.swapMaster)
+  , ("<Print>", spawn "scrot")
+  , ("C-<Print>", spawn "sleep 0.2; scrot -s")
 
-    -- Swap the focused window with the next window
-    , ("M-S-k", windows W.swapDown)
+  -- toggle statusbar
+  , ("M-b", sendMessage ToggleStruts)
 
-    -- Swap the focused window with the previous window
-    , ("M-S-j", windows W.swapUp)
+  -- movement
+  , ("M-k", windows W.focusUp)
+  , ("M-j", windows W.focusDown)
+  , ("M-S-k", windows W.swapUp)
+  , ("M-S-j", windows W.swapDown)
+  , ("M-C-k", DO.swapWith Next NonEmptyWS)
+  , ("M-C-j", DO.swapWith Prev NonEmptyWS)
 
-    -- Shrink the master area
-    , ("M-h", sendMessage Shrink)
+  -- workspaces
+  , ("M-`", removeEmptyWorkspaceAfter $ switchProjectPrompt myPromptTheme)
+  , ("M-S-`", shiftToProjectPrompt myPromptTheme)
+  ] ++
+  [ ("M-" ++ m ++ k, g $ DO.withNthWorkspace f i)
+  | (i, k) <- zip [0..] wsKeys
+  , (f, g, m) <- [ (W.greedyView, removeEmptyWorkspaceAfter, "")
+                 , (W.shift, id, "S-")]
+  ] ++
+  [ ("M-+", removeEmptyWorkspaceAfter $ DO.withNthWorkspace W.greedyView 10)
+  , ("M-S-+", DO.withNthWorkspace W.shift 10)
+  ]
 
-    -- Expand the master area
-    , ("M-l", sendMessage Expand)
+extraKeys =
+  -- Fix for dead acute not being in EZConfig
+  [ ( (myModMask, xK_dead_acute)
+    , removeEmptyWorkspaceAfter $ DO.withNthWorkspace W.greedyView 11)
+  , ( (myModMask .|. shiftMask, xK_dead_acute), DO.withNthWorkspace W.shift 11)
+  ]
 
-    -- Push window back into tiling
-    , ("M-t", withFocused $ windows . W.sink)
+quitXmonad = io (exitWith ExitSuccess)
+restartXmonad = spawn "killall dzen2; xmonad --restart"
+rebuildXmonad = spawn "killall dzen2; ~/.xmonad/build.sh; xmonad --restart"
 
-    -- Increment the number of windows in the master area
-    , ("M-,", sendMessage (IncMasterN 1))
-
-    -- Deincrement the number of windows in the master area
-    , ("M-.", sendMessage (IncMasterN (-1)))
-
-    -- Toggle the status bar gap
-    , ("M-b", sendMessage ToggleStruts)
-
-    -- Quit xmonad
-    , ("M-S-q", io (exitWith ExitSuccess))
-
-    -- Restart xmonad
-    , ("M-q", spawn "killall dzen2; ~/.xmonad/build.sh; xmonad --restart")
-
-    -- Toggle mute
-    , ("<XF86AudioMute>", spawn "amixer set Master toggle")
-
-    -- Increase volume
-    , ("<XF86AudioRaiseVolume>", spawn "amixer set Master 2%+")
-    , ("M-<Up>", spawn "amixer set Master 2%+")
-
-    -- Decrease volume
-    , ("<XF86AudioLowerVolume>", spawn "amixer set Master 2%-")
-    , ("M-<Down>", spawn "amixer set Master 2%-")
-
-    , ("<XF86AudioPlay>", spawn "mpc toggle")
-    , ("<XF86AudioPrev>", spawn "mpc prev")
-    , ("<XF86AudioNext>", spawn "mpc next")
-
-    -- Lock screen
-    , ("M-S-z", spawn "xscreensaver-command -lock")
-
-    -- Suspend system
-    , ("M-S-s", spawn "systemctl suspend -i")
-
-    -- Switch to Openbox
-    , ("M-S-o", restart "~/.xmonad/obtoxmd" True)
-
-    -- Print screen
-    , ("<Print>", spawn "scrot")
-
-    -- Print a selected window
-    , ("C-<Print>", spawn "sleep 0.2; scrot -s")
-
-    -- Launch application
-    , ("M-x w", spawn "firefox")
-    , ("M-x e", spawn "emacs")
-    , ("M-x r", spawn "evince")
-    , ("M-x t", spawn "lxtask")
-
-    -- Set display with xrandr
-    , ("M-d i", spawn "xrandr --output DP1 --off --output eDP1 --auto")
-    , ("M-d e", spawn "xrandr --output DP1 --auto --output eDP1 --off")
-    , ("M-d m", spawn "xrandr --output DP1 --auto --output eDP1 --auto")
-    , ("M-d l", spawn "xrandr --output DP1 --primary --auto --output eDP1 --left-of DP1 --auto")
-    , ("M-d r", spawn "xrandr --output DP1 --primary --auto --output eDP1 --right-of DP1 --auto")
-    , ("M-d a", spawn "xrandr --output DP1 --primary --auto --output eDP1 --above DP1 --auto")
-    , ("M-d b", spawn "xrandr --output DP1 --primary --auto --output eDP1 --below DP1 --auto")
-
-    -- Take a note
-    , ("M-a", appendFilePrompt def "~/NOTES")
-
-    -- Password bindings
-    , ("M-S-p", passPrompt def)
-    , ("M-S-C-p", passGeneratePrompt def)
-
-    ---- Laptop function keys
-    -- Blank screen
-    , ("M-<F7>", spawn "sleep 0.2; xset dpms force off")
-
-    -- Toggle touchpad
-    , ("M-<F8>", spawn "~/.xmonad/trackpad-toggle.sh")
-
-    -- Decrease backlight
-    , ("<XF86MonBrightnessDown>", spawn "xbacklight -dec 2")
-
-    -- Increase backlight
-    , ("<XF86MonBrightnessUp>",   spawn "xbacklight -inc 2")
-
-    -- Switch border on current window
-    , ("M-g", withFocused toggleBorder)
-
-    -- Check keymap
-    , ("M-x x k", return () >> checkKeymap conf (myKeymap conf))
-
-    -- Display window on multiple
-    , ("M-v", windows copyToAll) -- @@ Make focused window always visible
-    , ("M-S-v",  killAllOtherCopies) -- @@ Toggle window state back
-
-
-    ]
-    ++
-
-    --
-    -- mod-[1..9], Switch to workspace N
-    -- mod-shift-[1..9], Move client to workspace N
-    --
-    [ ("M-" ++ m ++ k, windows $ f i)
-          | (i, k) <- zip (XMonad.workspaces conf) myWorkspaces
-          , (f, m) <- [(W.greedyView, ""), (W.shift, "S-")]]
-    ++
-    [ ("M-+", windows $ W.greedyView (myWorkspaces !! 10))
-    , ("M-S-+", windows $ W.shift (myWorkspaces !! 10))
-    ]
-    ++
 
     --
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
     -- mod-shift-{w,e,r}, Move client to screen 1, 2, or 3
     --
-    let monitorKeys = ["w","e","r"]
-    in  [("M-" ++ m ++ key, screenWorkspace sc >>= flip whenJust (windows . f))
-          | (key, sc) <- zip monitorKeys [0..]
-          , (f, m) <- [(W.view, ""), (W.shift, "S-")]]
+    -- let monitorKeys = ["w","e","r"]
+    -- in  [("M-" ++ m ++ key, screenWorkspace sc >>= flip whenJust (windows . f))
+    --       | (key, sc) <- zip monitorKeys [0..]
+    --       , (f, m) <- [(W.view, ""), (W.shift, "S-")]]
 
     --, ((modm,               xK_Left),  withFocused $ snapMove L Nothing)
     --, ((modm,               xK_Right), withFocused $ snapMove R Nothing)
@@ -246,11 +312,10 @@ myKeymap conf =
     --, ((modm .|. shiftMask, xK_Up),    withFocused $ snapShrink D Nothing)
     --, ((modm .|. shiftMask, xK_Down),  withFocused $ snapGrow D Nothing)
 
-myKeys conf = mkKeymap conf $ myKeymap conf
-
 ------------------------------------------------------------------------
 -- Mouse bindings: default actions bound to mouse events
---
+------------------------------------------------------------------------
+
 myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 
     -- mod-button1, Set the window to floating mode and move by dragging
@@ -269,52 +334,40 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 
 ------------------------------------------------------------------------
 -- Layouts:
+------------------------------------------------------------------------
 
--- You can specify and transform your layouts by modifying these values.
--- If you change layout bindings be sure to use 'mod-shift-space' after
--- restarting (with 'mod-q') to reset your layout state to the new
--- defaults, as xmonad preserves your old layout settings by default.
---
--- * NOTE: XMonad.Hooks.EwmhDesktops users must remove the obsolete
--- ewmhDesktopsLayout modifier from layoutHook. It no longer exists.
--- Instead use the 'ewmh' function from that module to modify your
--- defaultConfig as a whole. (See also logHook, handleEventHook, and
--- startupHook ewmh notes.)
---
--- The available layouts.  Note that each layout is separated by |||,
--- which denotes layout choice.
---
-myLayout = smartBorders $ defaultLayout
+myLayout = smartBorders $
+           avoidStruts $
+           onWorkspace "WEB" tabbedFirst $
+           onWorkspace "EDT" editorFirst $
+           onWorkspace "STM" fullFirst $
+           defaultOrder
   where
-    -- default Layout
-    defaultLayout =
-      avoidStruts (renamed [Replace "Tiled"] tiled |||
-                   renamed [Replace "Mirror"] (Mirror tiled) |||
-                   renamed [Replace "Tabbed"] (tabbed shrinkText myTabTheme) |||
-                   renamed [Replace "Editor"] editorLayout |||
-                   noBorders Full)
+    -- Layouts
+    tiledLayout  = named "Tiled"  $ tiled
+    mirrorLayout = named "Mirror" $ Mirror tiled
+    tabbedLayout = named "Tabbed" $ tabbed shrinkText myTabTheme
+    editorLayout = named "Editor" $ reflectHoriz $ FixedColumn 1 20 164 10
+    fullLayout   = noBorders Full
 
-    -- default tiling algorithm partitions the screen into two panes
+    named x      = renamed [Replace x]
     tiled        = Tall 1 (3/100) (1/2)
 
-    -- editor layout
-    editorLayout = reflectHoriz $ FixedColumn 1 20 164 10
+    -- Orders
+    defaultOrder = tiledFirst
+    tiledFirst   = tiledLayout  ||| mirrorLayout ||| tabbedLayout |||
+                   editorLayout ||| fullLayout
+    tabbedFirst  = tabbedLayout ||| editorLayout ||| fullLayout   |||
+                   tiledLayout  ||| mirrorLayout
+    editorFirst  = editorLayout ||| fullLayout   ||| tiledLayout  |||
+                   mirrorLayout ||| tabbedLayout
+    fullFirst    = fullLayout   ||| tiledLayout  ||| mirrorLayout |||
+                   tabbedLayout ||| editorLayout
 
 ------------------------------------------------------------------------
 -- Window rules:
+------------------------------------------------------------------------
 
--- Execute arbitrary actions and WindowSet manipulations when managing
--- a new window. You can use this to, for example, always float a
--- particular program, or have a client always appear on a particular
--- workspace.
---
--- To find the property name associated with a program, use
--- > xprop | grep WM_CLASS
--- and click on the client you're interested in.
---
--- To match on the WM_NAME, you can use 'title' in the same way that
--- 'className' and 'resource' are used below.
---
 myManageHook = manageDocks <+> (composeAll . concat $
     [ [transience']
     , [isDialog --> doFloat]
@@ -339,109 +392,39 @@ myDoFullFloat = doF W.focusDown <+> doFullFloat
 
 ------------------------------------------------------------------------
 -- Event handling
+------------------------------------------------------------------------
 
--- Defines a custom handler function for X Events. The function should
--- return (All True) if the default handler is to be run afterwards. To
--- combine event hooks use mappend or mconcat from Data.Monoid.
---
--- * NOTE: EwmhDesktops users should use the 'ewmh' function from
--- XMonad.Hooks.EwmhDesktops to modify their defaultConfig as a whole.
--- It will add EWMH event handling to your custom event hooks by
--- combining them with ewmhDesktopsEventHook.
---
 myEventHook = docksEventHook
 
 ------------------------------------------------------------------------
--- Status bars and logging
-
--- Perform an arbitrary action on each internal state change or X event.
--- See the 'XMonad.Hooks.DynamicLog' extension for examples.
---
---
--- * NOTE: EwmhDesktops users should use the 'ewmh' function from
--- XMonad.Hooks.EwmhDesktops to modify their defaultConfig as a whole.
--- It will add EWMH logHook actions to your custom log hook by
--- combining it with ewmhDesktopsLogHook.
---
-myLogHook h = dynamicLogWithPP $ def
-    {
-        ppCurrent           =   dzenColor "#ebac54" "#1B1D1E" . pad
-      , ppVisible           =   dzenColor "white" "#1B1D1E" . pad
-      , ppHidden            =   dzenColor "white" "#1B1D1E" . pad
-      , ppHiddenNoWindows   =   dzenColor "#7b7b7b" "#1B1D1E" . pad
-      , ppUrgent            =   dzenColor "#37C0F4" "#1B1D1E" . pad
-      , ppWsSep             =   " "
-      , ppSep               =   "  |  "
-      , ppLayout            =   dzenColor "#ebac54" "#1B1D1E"
-      , ppTitle             =   (" " ++) . dzenColor "white" "#1B1D1E" . dzenEscape
-      , ppOutput            =   hPutStrLn h
-    }
-
-{-
-. (\x -> case x of
-           "ResizableTall"        -> "^i(" ++ myBitmapsDir ++ "/tall.xbm)"
-           "Mirror ResizableTall" -> "^i(" ++ myBitmapsDir ++ "/mtall.xbm)"
-           "Full"                 -> "^i(" ++ myBitmapsDir ++ "/full.xbm)"
-           "Simple Float"         -> "~"
-           _                      -> x
-)-}
-
-------------------------------------------------------------------------
 -- Startup hook
+------------------------------------------------------------------------
 
--- Perform an arbitrary action each time xmonad starts or is restarted
--- with mod-q.  Used by, e.g., XMonad.Layout.PerWorkspace to initialize
--- per-workspace layout choices.
---
--- By default, do nothing.
---
--- * NOTE: EwmhDesktops users should use the 'ewmh' function from
--- XMonad.Hooks.EwmhDesktops to modify their defaultConfig as a whole.
--- It will add initialization of EWMH support to your custom startup
--- hook by combining it with ewmhDesktopsStartup.
---
-
-myStartupHook = setWMName "LG3D"
+myStartupHook conf = do setWMName "LG3D"
+                        return () >> checkKeymap conf (myKeymap conf)
 
 ------------------------------------------------------------------------
 
-myXmonadBar =
-  let w = "860"
-  in  unwords [ "dzen2 -x '0' -y '0' -h '24' -w '" ++ w ++ "' -ta 'l'"
-              , "-fg '#FFFFFF' -bg '#1B1D1E' -e 'onstart=lower' -dock"
-              ]
-
-myStatusBar =
-  let x = "860"
-      w = "860"
-  in  unwords [ "conky -c ~/.xmonad/conky_dzen | dzen2"
-              , "-x '" ++ x ++ "' -y '0' -w '" ++ w ++ "' -h '24' -ta 'r'"
-              , "-bg '#1B1D1E' -fg '#FFFFFF' -e 'onstart=lower' -dock"
-              ]
-
 ------------------------------------------------------------------------
--- Now run xmonad with all the defaults we set up.
+-- Main program
+------------------------------------------------------------------------
 
--- Run xmonad with the settings you specify. No need to modify this.
---
 main = do replace
           dzenLeftBar  <- spawnPipe myXmonadBar
           spawn myStatusBar
-          xmonad $ withUrgencyHook NoUrgencyHook $ defaults dzenLeftBar
+          xmonad $
+            dynamicProjects projects $
+            withUrgencyHook NoUrgencyHook $
+            ewmh $
+            defaults dzenLeftBar
 
--- A structure containing your configuration settings, overriding
--- fields in the default config. Any you don't override, will
--- use the defaults defined in xmonad/XMonad/Config.hs
---
--- No need to modify this.
---
-defaults logBar = ewmh $ def {
+defaults logBar = def {
       -- simple stuff
         terminal           = myTerminal,
         focusFollowsMouse  = myFocusFollowsMouse,
         borderWidth        = myBorderWidth,
         modMask            = myModMask,
-        workspaces         = myWorkspaces,
+        workspaces         = startingWorkspaces,
         normalBorderColor  = myNormalBorderColor,
         focusedBorderColor = myFocusedBorderColor,
 
@@ -454,16 +437,13 @@ defaults logBar = ewmh $ def {
         manageHook         = myManageHook,
         handleEventHook    = myEventHook,
         logHook            = myLogHook logBar,
-        startupHook        = myStartupHook
+        startupHook        = myStartupHook (defaults logBar)
     }
-    `additionalKeys`
-    -- Fix for dead acute not being in EZConfig
-    [ ((myModMask, xK_dead_acute) , windows $ W.greedyView (myWorkspaces !! 11))
-    , ((myModMask .|. shiftMask, xK_dead_acute) , windows $ W.shift (myWorkspaces !! 11))
-    ]
+    `additionalKeys` extraKeys
 
 ------------------------------------------------------------------------
 -- Extra utils
+------------------------------------------------------------------------
 
 dzenClickable :: String -> String -> String
 dzenClickable action label = "^ca(1," ++ action ++ ")" ++ label ++ "^ca()"
