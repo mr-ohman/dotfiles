@@ -57,7 +57,6 @@ myEditor        = "emacs"
 myWebBrowser    = "firefox"
 myFileBrowser   = "thunar"
 myPDFReader     = "evince"
-myTaskManager   = "lxtask"
 
 ------------------------------------------------------------------------
 -- Theme settings
@@ -180,6 +179,8 @@ myModMask = mod4Mask
 
 wsKeys = map (:[]) ['1'..'9'] ++ ["0","-","="]
 
+-- TODO: Add showing of the keymap a la spacemacs and make M
+-- xmonads leader key
 myKeys conf = mkKeymap conf $ myKeymap conf
 myKeymap conf =
   -- M-q, [q]uit or restart xmonad
@@ -192,30 +193,36 @@ myKeymap conf =
   , ("M-s z", spawn "xscreensaver-command -lock")
   , ("M-s s", spawn "systemctl suspend -i")
 
-  -- M-x, e[x]ecute program
+  -- M-x, e[x]ecute program and misc utils
   , ("M-x x", spawn myLauncher)
   , ("M-x t", spawn myTerminal)
   , ("M-x w", spawn myWebBrowser)
   , ("M-x e", spawn myEditor)
   , ("M-x r", spawn myPDFReader)
-  , ("M-x t", spawn myTaskManager)
   , ("M-x f", spawn myFileBrowser)
+  , ("M-x p s", passPrompt myPromptTheme)
+  , ("M-x p g", passGeneratePrompt myPromptTheme)
 
   -- M-w, [w]indow management
-  , ("M-w x", kill)
-  , ("M-w S-x", confirmPrompt hotPromptTheme "kill all" $ killAll)
+  , ("M-w x", kill1)
   , ("M-w r", refresh)  -- Resize viewed windows to the correct size
   , ("M-w k", windows W.swapUp)
   , ("M-w j", windows W.swapDown)
   , ("M-w t", withFocused $ windows . W.sink)
   , ("M-w m", windows W.swapMaster)
   , ("M-w b", withFocused toggleBorder)
-  , ("M-w c", windows copyToAll)
   , ("M-w d", killAllOtherCopies)
+  , ("M-w c a", windows copyToAll)
+  ] ++
+  [ ("M-w c " ++ k, DO.withNthWorkspace copy i)
+  | (i, k) <- zip [0..] wsKeys
+  ] ++
 
-  -- M-S-w, [w]orkspaces
-  , ("M-S-w r", renameProjectPrompt myPromptTheme)
-  , ("M-S-w d", changeProjectDirPrompt myPromptTheme)
+  -- M-p, [p]rojects
+  [ ("M-p x", confirmPrompt hotPromptTheme "kill project" $
+      killAll >> removeWorkspace)
+  , ("M-p r", renameProjectPrompt myPromptTheme)
+  , ("M-p d", changeProjectDirPrompt myPromptTheme)
 
   -- M-l, [l]ayout management
   , ("M-l k", sendMessage NextLayout)
@@ -240,9 +247,6 @@ myKeymap conf =
   , ("M-d b", spawn "xrandr --output DP1 --primary --auto --output eDP1 --below DP1 --auto")
 
   -- M-p, [p]assword
-  , ("M-p p", passPrompt myPromptTheme)
-  , ("M-p g", passGeneratePrompt myPromptTheme)
-
   -- misc system
   , ("<XF86AudioMute>",        spawn "amixer set Master toggle")
   , ("M-<Up>",                 spawn "amixer set Master 2%+")
@@ -402,8 +406,6 @@ myEventHook = docksEventHook
 
 myStartupHook conf = do setWMName "LG3D"
                         return () >> checkKeymap conf (myKeymap conf)
-
-------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
 -- Main program
