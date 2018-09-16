@@ -54,9 +54,12 @@ import XMonad.Util.Run
 myTerminal      = "urxvt"
 myLauncher      = "rofi -matching fuzzy -show run"
 myEditor        = "emacs"
+myEditTerminal  = "urxvt -bg '#313131' -fg '#dcdccc' +tr"
 myWebBrowser    = "firefox"
 myFileBrowser   = "thunar"
-myPDFReader     = "evince"
+myPDFReader     = "okular"
+myReadTerminal  = "urxvt -bg '#eeeeee' -fg '#020202' +tr"
+myNotepad       = "gedit"
 
 ------------------------------------------------------------------------
 -- Theme settings
@@ -152,9 +155,9 @@ projects =
   , Project { projectName = "EDT"
             , projectDirectory = "~/"
             , projectStartHook = Just $ do spawnOn "EDT" myEditor
-                                           spawnOn "EDT" myTerminal
-                                           spawnOn "EDT" myTerminal
-                                           spawnOn "EDT" myTerminal
+                                           spawnOn "EDT" myEditTerminal
+                                           spawnOn "EDT" myEditTerminal
+                                           spawnOn "EDT" myEditTerminal
             }
   , Project { projectName = "COM"
             , projectDirectory = "~/"
@@ -168,6 +171,12 @@ projects =
             , projectDirectory = "~/"
             , projectStartHook = Just $ do spawnOn "SYS" myTerminal
                                            spawnOn "SYS" myTerminal
+            }
+  , Project { projectName = "DOC"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ do spawnOn "DOC" myPDFReader
+                                           spawnOn "DOC" myNotepad
+                                           spawnOn "DOC" myReadTerminal
             }
   ]
 
@@ -344,14 +353,16 @@ myLayout = smartBorders $
            avoidStruts $
            onWorkspace "WEB" tabbedFirst $
            onWorkspace "EDT" editorFirst $
+           onWorkspace "DOC" readLayout $
            onWorkspace "STM" fullFirst $
            defaultOrder
   where
     -- Layouts
-    tiledLayout  = named "Tiled"  $ tiled
-    mirrorLayout = named "Mirror" $ Mirror tiled
-    tabbedLayout = named "Tabbed" $ tabbed shrinkText myTabTheme
-    editorLayout = named "Editor" $ reflectHoriz $ FixedColumn 1 20 164 10
+    tiledLayout  = named "Tiled"   $ tiled
+    mirrorLayout = named "Mirror"  $ Mirror tiled
+    tabbedLayout = named "Tabbed"  $ tabbed shrinkText myTabTheme
+    editorLayout = named "Editor"  $ reflectHoriz $ FixedColumn 1 20 164 10
+    readLayout   = named "Reading" $ Tall 1 (3/100) (5/6)
     fullLayout   = noBorders Full
 
     named x      = renamed [Replace x]
