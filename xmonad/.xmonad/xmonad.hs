@@ -148,37 +148,69 @@ myCommonBar =
 startingWorkspaces = ["."]
 
 projects =
+  -- Web browsing
   [ Project { projectName = "WEB"
             , projectDirectory = "~/"
             , projectStartHook = Just $ spawnOn "WEB" myWebBrowser
             }
+  -- Editor
   , Project { projectName = "EDT"
             , projectDirectory = "~/"
-            , projectStartHook = Just $ do spawnOn "EDT" myEditor
-                                           spawnOn "EDT" myEditTerminal
-                                           spawnOn "EDT" myEditTerminal
-                                           spawnOn "EDT" myEditTerminal
+            , projectStartHook = Just $ changeProjectDirIfHome $ do
+                                        spawnOn "EDT" myEditor
+                                        spawnOn "EDT" myEditTerminal
+                                        spawnOn "EDT" myEditTerminal
+                                        spawnOn "EDT" myEditTerminal
             }
-  , Project { projectName = "COM"
+   -- GIT version control
+  , Project { projectName = "GIT"
             , projectDirectory = "~/"
-            , projectStartHook = Just $ spawnOn "COM" "telegram-desktop"
+            , projectStartHook = Just $ changeProjectDirIfHome $ do
+                                        spawnOn "GIT" "git gui"
+                                        spawnOn "GIT" "gitk"
             }
-  , Project { projectName = "STM"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ spawnOn "STM" "steam"
-            }
-  , Project { projectName = "SYS"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ do spawnOn "SYS" myTerminal
-                                           spawnOn "SYS" myTerminal
-            }
+  -- Document reading
   , Project { projectName = "DOC"
             , projectDirectory = "~/"
             , projectStartHook = Just $ do spawnOn "DOC" myPDFReader
                                            spawnOn "DOC" myNotepad
                                            spawnOn "DOC" myReadTerminal
+                                           spawnOn "DOC" myFileBrowser
+            }
+  -- Remote access
+  , Project { projectName = "REM"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ do spawnOn "REM" myTerminal
+                                           spawnOn "REM" myTerminal
+            }
+  -- Video watching
+  , Project { projectName = "VID"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ spawnOn "VID" "vlc"
+            }
+  -- Communication
+  , Project { projectName = "COM"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ spawnOn "COM" "telegram-desktop"
+            }
+  -- Steam
+  , Project { projectName = "STM"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ spawnOn "STM" "steam"
+            }
+  -- System management
+  , Project { projectName = "SYS"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ do spawnOn "SYS" myTerminal
+                                           spawnOn "SYS" myTerminal
             }
   ]
+
+changeProjectDirIfHome sh = do
+  p <- currentProject
+  if projectDirectory p == "~/"
+  then changeProjectDirPrompt myPromptTheme
+  else sh
 
 ------------------------------------------------------------------------
 -- Key bindings
@@ -244,7 +276,9 @@ myKeymap conf =
   , ("M-m p", spawn "mpc toggle")
   , ("<XF86AudioPlay>", spawn "mpc toggle")
   , ("M-m j", spawn "mpc next")
+  , ("<XF86AudioNext>", spawn "mpc next")
   , ("M-m k", spawn "mpc prev")
+  , ("<XF86AudioPrev>", spawn "mpc prev")
 
   -- M-d, [d]isplay
   , ("M-d i", spawn "xrandr --output DP1 --off --output eDP1 --auto")
@@ -354,6 +388,7 @@ myLayout = smartBorders $
            onWorkspace "WEB" tabbedFirst $
            onWorkspace "EDT" editorFirst $
            onWorkspace "DOC" readLayout $
+           onWorkspace "VID" fullFirst $
            onWorkspace "STM" fullFirst $
            defaultOrder
   where
