@@ -162,7 +162,14 @@ projects =
                                         spawnOn "EDT" myEditTerminal
                                         spawnOn "EDT" myEditTerminal
             }
-   -- GIT version control
+   -- LaTeX editor
+  , Project { projectName = "TEX"
+            , projectDirectory = "~/"
+            , projectStartHook = Just $ changeProjectDirIfHome $ do
+                                        spawnOn "TEX" myEditor
+                                        spawnOn "TEX" myPDFReader
+            }
+  -- GIT version control
   , Project { projectName = "GIT"
             , projectDirectory = "~/"
             , projectStartHook = Just $ changeProjectDirIfHome $ do
@@ -289,7 +296,6 @@ myKeymap conf =
   , ("M-d a", spawn "xrandr --output DP1 --primary --auto --output eDP1 --above DP1 --auto")
   , ("M-d b", spawn "xrandr --output DP1 --primary --auto --output eDP1 --below DP1 --auto")
 
-  -- M-p, [p]assword
   -- misc system
   , ("<XF86AudioMute>",        spawn "amixer set Master toggle")
   , ("M-<Up>",                 spawn "amixer set Master 2%+")
@@ -386,33 +392,33 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 myLayout = smartBorders $
            avoidStruts $
            onWorkspace "WEB" tabbedFirst $
-           onWorkspace "EDT" editorFirst $
+           onWorkspace "EDT" editorLayout $
            onWorkspace "DOC" readLayout $
            onWorkspace "VID" fullFirst $
            onWorkspace "STM" fullFirst $
            defaultOrder
   where
-    -- Layouts
+    -- Regular layouts
     tiledLayout  = named "Tiled"   $ tiled
     mirrorLayout = named "Mirror"  $ Mirror tiled
     tabbedLayout = named "Tabbed"  $ tabbed shrinkText myTabTheme
+    fullLayout   = noBorders Full
+
+    -- Special layouts
     editorLayout = named "Editor"  $ reflectHoriz $ FixedColumn 1 20 164 10
     readLayout   = named "Reading" $ Tall 1 (3/100) (5/6)
-    fullLayout   = noBorders Full
 
     named x      = renamed [Replace x]
     tiled        = Tall 1 (3/100) (1/2)
 
     -- Orders
     defaultOrder = tiledFirst
-    tiledFirst   = tiledLayout  ||| mirrorLayout ||| tabbedLayout |||
-                   editorLayout ||| fullLayout
-    tabbedFirst  = tabbedLayout ||| editorLayout ||| fullLayout   |||
-                   tiledLayout  ||| mirrorLayout
-    editorFirst  = editorLayout ||| fullLayout   ||| tiledLayout  |||
-                   mirrorLayout ||| tabbedLayout
-    fullFirst    = fullLayout   ||| tiledLayout  ||| mirrorLayout |||
-                   tabbedLayout ||| editorLayout
+    tiledFirst   =
+      tiledLayout  ||| mirrorLayout ||| tabbedLayout ||| fullLayout
+    tabbedFirst  =
+      tabbedLayout ||| fullLayout   ||| tiledLayout  ||| mirrorLayout
+    fullFirst    =
+      fullLayout   ||| tiledLayout  ||| mirrorLayout ||| tabbedLayout
 
 ------------------------------------------------------------------------
 -- Window rules:
