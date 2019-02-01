@@ -11,11 +11,6 @@ update_interval 1
 # ^fg(\#ff77ff)^i($HOME/.xmonad/xbm-icons/net_down_03.xbm) ${totaldown wlp4s0} \
 # ^i($HOME/.xmonad/xbm-icons/net_up_03.xbm) ${totalup wlp4s0} \
 
-## Mail notification
-# ${if_match ${execi 60 notmuch count tag:inbox and tag:unread} <= 0}${else} \
-# ^ca(1,emacs -f notmuch)^fg(\#ff0000)^i($HOME/.xmonad/xbm-icons/mail.xbm) \
-# ${execi 60 notmuch count tag:inbox and tag:unread}^ca()${endif} \
-
 ## Local temprature
 # ^i($HOME/.xmonad/xbm-icons/temp.xbm) \
 # ${execi 600 $HOME/scripts/weather.sh} \
@@ -23,6 +18,9 @@ update_interval 1
 TEXT
 ${if_match "${mpd_status}" == "Playing"}^fg(\#ffff77)\
 ^i($HOME/.xmonad/xbm-icons/note.xbm) ${scroll 20 ${mpd_smart}}${endif} \
+${if_match ${execi 60 notmuch count tag:inbox and tag:unread} <= 0}${else} \
+^ca(1,emacs -f notmuch)^fg(\#ffffff)^i($HOME/.xmonad/xbm-icons/mail.xbm) \
+${execi 60 notmuch count tag:inbox and tag:unread}^ca()${endif} \
 ^fg(\#ffffff)^i($HOME/.xmonad/xbm-icons/cpu.xbm) ${cpu}% \
 ^i($HOME/.xmonad/xbm-icons/mem.xbm) ${memperc}% \
 ^i($HOME/.xmonad/xbm-icons/temp.xbm) ${hwmon 1 temp 1}°C \
