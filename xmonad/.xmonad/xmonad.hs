@@ -156,11 +156,8 @@ projects =
   -- Editor
   , Project { projectName = "EDT"
             , projectDirectory = "~/"
-            , projectStartHook = Just $ changeProjectDirIfHome $ do
+            , projectStartHook = Just $ changeProjectDirIfHome $
                                         spawnOn "EDT" myEditor
-                                        spawnOn "EDT" myEditTerminal
-                                        spawnOn "EDT" myEditTerminal
-                                        spawnOn "EDT" myEditTerminal
             }
    -- LaTeX editor
   , Project { projectName = "TEX"
@@ -392,7 +389,7 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 myLayout = smartBorders $
            avoidStruts $
            onWorkspace "WEB" tabbedFirst $
-           onWorkspace "EDT" editorLayout $
+           onWorkspace "EDT" tabbedFirst $
            onWorkspace "DOC" readLayout $
            onWorkspace "VID" fullFirst $
            onWorkspace "STM" fullFirst $
@@ -405,7 +402,7 @@ myLayout = smartBorders $
     fullLayout   = noBorders Full
 
     -- Special layouts
-    editorLayout = named "Editor"  $ reflectHoriz $ FixedColumn 1 20 164 10
+    -- editorLayout = named "Editor"  $ reflectHoriz $ FixedColumn 1 20 164 10
     readLayout   = named "Reading" $ Tall 1 (3/100) (5/6)
 
     named x      = renamed [Replace x]
