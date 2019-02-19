@@ -67,6 +67,9 @@ This function should only modify configuration layer settings."
      ;;;; System
      nixos
 
+     ;;;; Readers
+     pdf
+
      ;;;; Source control
      git
      (version-control :variables version-control-global-margin t)
@@ -432,7 +435,7 @@ It should only modify the values of Spacemacs settings."
    ;; %z - mnemonics of buffer, terminal, and keyboard coding systems
    ;; %Z - like %z, but including the end-of-line format
    ;; (default "%I@%S")
-   dotspacemacs-frame-title-format "%a - %I"
+   dotspacemacs-frame-title-format "%b - %I"
 
    ;; Format specification for setting the icon title format
    ;; (default nil - same as frame-title-format)
@@ -539,11 +542,11 @@ This function is called at the very end of Spacemacs initialization."
  '(coq-indent-modulestart 0)
  '(coq-indent-proofstart 0)
  '(indent-tabs-mode nil)
+ '(pdf-view-midnight-colors (quote ("#dcdccc" . "#313131")))
+ '(proof-auto-raise-buffers t)
  '(proof-three-window-enable nil)
+ '(proof-toolbar-enable nil)
  '(send-mail-function (quote sendmail-send-it)))
- '(package-selected-packages
-   (quote
-    (zenburn-theme tao-theme solarized-theme proof-general org-ref pdf-tools tablist org-projectile org-download org-brain minimal-theme kaolin-themes hlint-refactor hl-todo helm-xref helm-bibtex gruvbox-theme eyebrowse evil-visual-mark-mode evil-matchit evil-magit eval-sexp-fu eshell-prompt-extras editorconfig dracula-theme doom-themes doom-modeline eldoc-eval diff-hl define-word cyberpunk-theme counsel-projectile counsel swiper ivy company-coq math-symbol-lists color-theme-sanityinc-tomorrow auto-compile apropospriate-theme aggressive-indent ace-link smartparens company window-purpose imenu-list helm helm-core markdown-mode magit git-commit powerline projectile ace-window avy f dash visual-fill-column org-plus-contrib evil goto-chg zen-and-art-theme yasnippet-snippets xterm-color ws-butler writeroom-mode with-editor winum white-sand-theme which-key volatile-highlights vi-tilde-fringe uuidgen use-package undo-tree underwater-theme ujelly-theme twilight-theme twilight-bright-theme twilight-anti-bright-theme treepy treemacs-projectile treemacs-evil toxi-theme toc-org tangotango-theme tango-plus-theme tango-2-theme symon sunny-day-theme sublime-themes subatomic256-theme subatomic-theme string-inflection spaceline-all-the-icons spacegray-theme soothe-theme soft-stone-theme soft-morning-theme soft-charcoal-theme smyx-theme smeargle shrink-path shell-pop seti-theme reverse-theme restart-emacs rebecca-theme rainbow-delimiters railscasts-theme purple-haze-theme professional-theme popwin planet-theme phoenix-dark-pink-theme phoenix-dark-mono-theme persp-mode pcre2el password-generator parsebib paradox packed overseer orgit organic-green-theme org-present org-pomodoro org-mime org-category-capture org-bullets open-junk-file omtose-phellack-theme oldlace-theme occidental-theme obsidian-theme noctilux-theme nix-mode naquadah-theme nameless mustang-theme multi-term move-text monokai-theme monochrome-theme molokai-theme moe-theme mmm-mode material-theme markdown-toc majapahit-theme magit-svn magit-gitflow madhat2r-theme macrostep lush-theme lorem-ipsum link-hint light-soap-theme key-chord jbeans-theme jazz-theme ir-black-theme inkpot-theme indent-guide hungry-delete htmlize hindent highlight-parentheses highlight-numbers highlight-indentation highlight heroku-theme hemisu-theme helm-themes helm-swoop helm-purpose helm-projectile helm-org-rifle helm-notmuch helm-nixos-options helm-mode-manager helm-make helm-hoogle helm-gitignore helm-git-grep helm-flx helm-descbinds helm-company helm-c-yasnippet helm-ag hc-zenburn-theme haskell-snippets gruber-darker-theme graphql grandshell-theme gotham-theme google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe git-gutter-fringe+ gh-md gandalf-theme fuzzy font-lock+ flyspell-correct-helm flx-ido flatui-theme flatland-theme fill-column-indicator farmhouse-theme fancy-battery eziam-theme expand-region exotica-theme evil-visualstar evil-unimpaired evil-tutor evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu espresso-theme eshell-z esh-help elisp-slime-nav dumb-jump dotenv-mode django-theme diminish darktooth-theme darkokai-theme darkmine-theme darkburn-theme dakrone-theme company-statistics company-nixos-options company-math company-ghci company-cabal company-auctex column-enforce-mode color-theme-sanityinc-solarized cmm-mode clues-theme clean-aindent-mode cherry-blossom-theme centered-cursor-mode busybee-theme bubbleberry-theme browse-at-remote birds-of-paradise-plus-theme biblio badwolf-theme auto-yasnippet auto-highlight-symbol auto-dictionary auctex-latexmk anti-zenburn-theme ample-zen-theme ample-theme alect-themes afternoon-theme ace-jump-helm-line ac-ispell)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -551,3 +554,9 @@ This function is called at the very end of Spacemacs initialization."
  ;; If there is more than one, they won't work right.
  )
 )
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
