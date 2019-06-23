@@ -26,4 +26,4 @@ nm-applet &
 parcellite &
 redshift-gtk &
 
-exec xmonad
+exec myxmonad

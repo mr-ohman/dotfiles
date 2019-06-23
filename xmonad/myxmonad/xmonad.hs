@@ -51,14 +51,14 @@ import XMonad.Util.Run
 -- Application settings
 ------------------------------------------------------------------------
 
-myTerminal      = "urxvt"
+myTerminal      = "/usr/bin/urxvt"
 myLauncher      = "rofi -matching fuzzy -show run"
 myEditor        = "emacs"
-myEditTerminal  = "urxvt -bg '#313131' -fg '#dcdccc' +tr"
+myEditTerminal  = "/usr/bin/urxvt -bg '#313131' -fg '#dcdccc' +tr"
 myWebBrowser    = "firefox"
 myFileBrowser   = "thunar"
 myPDFReader     = "okular"
-myReadTerminal  = "urxvt -bg '#eeeeee' -fg '#020202' +tr"
+myReadTerminal  = "/usr/bin/urxvt -bg '#eeeeee' -fg '#020202' +tr"
 myNotepad       = "gedit"
 
 ------------------------------------------------------------------------
@@ -195,7 +195,8 @@ projects =
   -- Communication
   , Project { projectName = "COM"
             , projectDirectory = "~/"
-            , projectStartHook = Just $ spawnOn "COM" "telegram-desktop"
+            , projectStartHook = Just $ do spawnOn "COM" "telegram-desktop"
+                                           spawnOn "COM" "discord"
             }
   -- Steam
   , Project { projectName = "STM"
@@ -301,7 +302,7 @@ myKeymap conf =
   , ("<XF86AudioLowerVolume>", spawn "amixer set Master 2%-")
 
   , ("M-<F7>", spawn "sleep 0.2; xset dpms force off")
-  , ("M-<F8>", spawn "~/.xmonad/trackpad-toggle.sh")
+  , ("M-<F8>", spawn "trackpad-toggle.sh")
   , ("<XF86MonBrightnessDown>", spawn "xbacklight -dec 2")
   , ("<XF86MonBrightnessUp>",   spawn "xbacklight -inc 2")
 
