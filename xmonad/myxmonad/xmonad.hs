@@ -21,6 +21,7 @@ import XMonad.Actions.SpawnOn
 import qualified XMonad.Actions.DynamicWorkspaceOrder as DO
 import XMonad.Actions.CycleWS
 import XMonad.Actions.WithAll
+import XMonad.Actions.Submap
 
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
@@ -52,6 +53,7 @@ import XMonad.Util.Run
 ------------------------------------------------------------------------
 
 myTerminal      = "/usr/bin/urxvt"
+myNixTerminal   = "urxvt"
 myLauncher      = "rofi -matching fuzzy -show run"
 myEditor        = "emacs"
 myEditTerminal  = "/usr/bin/urxvt -bg '#313131' -fg '#dcdccc' +tr"
@@ -148,67 +150,18 @@ myCommonBar =
 startingWorkspaces = ["."]
 
 projects =
-  -- Web browsing
-  [ Project { projectName = "WEB"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ spawnOn "WEB" myWebBrowser
-            }
-  -- Editor
-  , Project { projectName = "EDT"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ changeProjectDirIfHome $
-                                        spawnOn "EDT" myEditor
-            }
-   -- LaTeX editor
-  , Project { projectName = "TEX"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ changeProjectDirIfHome $ do
-                                        spawnOn "TEX" myEditor
-                                        spawnOn "TEX" myPDFReader
-            }
-  -- GIT version control
-  , Project { projectName = "GIT"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ changeProjectDirIfHome $ do
-                                        spawnOn "GIT" "git gui"
-                                        spawnOn "GIT" "gitk"
-            }
-  -- Document reading
-  , Project { projectName = "DOC"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ do spawnOn "DOC" myPDFReader
-                                           spawnOn "DOC" myNotepad
-                                           spawnOn "DOC" myReadTerminal
-                                           spawnOn "DOC" myFileBrowser
-            }
-  -- Remote access
-  , Project { projectName = "REM"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ do spawnOn "REM" myTerminal
-                                           spawnOn "REM" myTerminal
-            }
-  -- Video watching
-  , Project { projectName = "VID"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ spawnOn "VID" "vlc"
-            }
-  -- Communication
-  , Project { projectName = "COM"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ do spawnOn "COM" "telegram-desktop"
-                                           spawnOn "COM" "discord"
-            }
-  -- Steam
-  , Project { projectName = "STM"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ spawnOn "STM" "steam"
-            }
-  -- System management
-  , Project { projectName = "SYS"
-            , projectDirectory = "~/"
-            , projectStartHook = Just $ do spawnOn "SYS" myTerminal
-                                           spawnOn "SYS" myTerminal
-            }
+  [ project "WEB"  False [myWebBrowser]
+  , project "MAIL" False ["thunderbird"]
+  , project "EDT"  True  [myEditor]
+  , project "GIT"  True  ["git gui", "gitk"]
+  , project "TEX"  True  [myEditor, myPDFReader]
+  , project "LYX"  True  ["lyx", myPDFReader]
+  , project "DOC"  False [myPDFReader, myReadTerminal, myFileBrowser]
+  , project "VID"  False ["vlc"]
+  , project "COM"  False ["telegram-desktop", "discord"]
+  , project "STM"  False ["steam"]
+  , project "SYS"  False [myTerminal, myTerminal]
+  , project "REM"  False [myTerminal, myTerminal]
   ]
 
 changeProjectDirIfHome sh = do
@@ -217,120 +170,187 @@ changeProjectDirIfHome sh = do
   then changeProjectDirPrompt myPromptTheme
   else sh
 
+project name cpd ps =
+  Project { projectName = name
+          , projectDirectory = "~/"
+          , projectStartHook = startHook
+          }
+  where startHook = if null ps then nops else withps
+        nops = if cpd then Just (changeProjectDirIfHome (return ())) else Nothing
+        withps = (if cpd then Just . changeProjectDirIfHome else Just) (programs ps)
+        programs [p] = spawnOn name p
+        programs (p:ps) = spawnOn name p >> programs ps
+
 ------------------------------------------------------------------------
 -- Key bindings
 ------------------------------------------------------------------------
+
+myKeys conf = mkKeymap conf $ mainKeymap conf
+
+-- Below originally from:
+-- https://blog.pclewis.com/2016/03/19/xmonad-spacemacs-style.html
+
+keyMapDoc :: String -> X Handle
+keyMapDoc name = do
+  -- focused screen location/size
+  r <- withWindowSet $ return . screenRect . W.screenDetail . W.current
+
+  handle <- spawnPipe $ unwords [ "~/.xmonad/showHintForKeymap.sh"
+                                , name
+                                , show (rect_x r)
+                                , show (rect_y r)
+                                , show (rect_width r)
+                                , show (rect_height r)
+                                , show orange    -- key color
+                                , show white     -- cmd color
+                                , "18"           -- line height
+                                ]
+
+  return handle
+
+toSubmap :: XConfig l -> String -> [(String, X ())] -> X ()
+toSubmap c name m = do
+  pipe <- keyMapDoc name
+  submap $ mkKeymap c m
+  io $ hClose pipe
 
 myModMask = mod4Mask
 
 wsKeys = map (:[]) ['1'..'9'] ++ ["0","-","="]
 
--- TODO: Add showing of the keymap a la spacemacs and make M
--- xmonads leader key
-myKeys conf = mkKeymap conf $ myKeymap conf
-myKeymap conf =
-  -- M-q, [q]uit or restart xmonad
-  [ ("M-q q", confirmPrompt hotPromptTheme "quit xmonad" $ quitXmonad)
-  , ("M-q r", restartXmonad)
-  , ("M-q S-r", rebuildXmonad)
-  , ("M-q o", restart "~/.xmonad/obtoxmd" True)
+mainKeymap c =
+  -- Mode keys
+  [ ("M-/",  toSubmap c "mainKeymap" (mainKeymap c)) -- Main Menu
+  , ("M-q",  toSubmap c "quitKeymap" quitKeymap) -- Quit
+  , ("M-s",  toSubmap c "systemKeymap" systemKeymap) -- System
+  , ("M-x",  toSubmap c "executeKeymap" executeKeymap) -- Execute
+  , ("M-w",  toSubmap c "windowKeymap" windowKeymap) -- Window
+  , ("M-p",  toSubmap c "projectKeymap" projectKeymap) -- Project
+  , ("M-l",  toSubmap c "layoutKeymap" layoutKeymap) -- Layout
+  , ("M-m",  toSubmap c "musicKeymap" musicKeymap) -- Music
+  , ("M-d",  toSubmap c "displayKeymap" displayKeymap) -- Display
+  ] ++ hiddenKeys
+  where hiddenKeys =
+          [ ("<XF86AudioMute>",        spawn "amixer set Master toggle") -- Mute
+          , ("M-<Up>",                 spawn "amixer set Master 2%+") -- Volume up
+          , ("<XF86AudioRaiseVolume>", spawn "amixer set Master 2%+") -- Volume up
+          , ("M-<Down>",               spawn "amixer set Master 2%-") -- Volume down
+          , ("<XF86AudioLowerVolume>", spawn "amixer set Master 2%-") -- Volume down
+          , ("<XF86AudioPlay>", spawn "mpc toggle") -- Play/Pause
+          , ("<XF86AudioNext>", spawn "mpc next") -- Play next
+          , ("<XF86AudioPrev>", spawn "mpc prev") -- Play previous
+          , ("<XF86MonBrightnessDown>", spawn "xbacklight -dec 2") -- Light down
+          , ("<XF86MonBrightnessUp>",   spawn "xbacklight -inc 2") -- Light up
+          , ("<Print>", spawn "scrot") -- Print screen
+          , ("C-<Print>", spawn "sleep 0.2; scrot -s") -- Print window
+          -- misc system
+          , ("M-<F7>", spawn "sleep 0.2; xset dpms force off")
+          , ("M-<F8>", spawn "trackpad-toggle.sh")
+          -- toggle statusbar
+          , ("M-b", sendMessage ToggleStruts)
 
-  -- M-s, [s]ystem
-  , ("M-s z", spawn "xscreensaver-command -lock")
-  , ("M-s s", spawn "systemctl suspend -i")
+          -- movement
+          , ("M-k", windows W.focusUp)
+          , ("M-j", windows W.focusDown)
+          , ("M-S-k", windows W.swapUp)
+          , ("M-S-j", windows W.swapDown)
+          , ("M-C-k", DO.swapWith Next NonEmptyWS)
+          , ("M-C-j", DO.swapWith Prev NonEmptyWS)
 
-  -- M-x, e[x]ecute program and misc utils
-  , ("M-x x", spawn myLauncher)
-  , ("M-x t", spawn myTerminal)
-  , ("M-x w", spawn myWebBrowser)
-  , ("M-x e", spawn myEditor)
-  , ("M-x r", spawn myPDFReader)
-  , ("M-x f", spawn myFileBrowser)
-  , ("M-x p s", passPrompt myPromptTheme)
-  , ("M-x p g", passGeneratePrompt myPromptTheme)
+          -- workspaces
+          , ("M-`", removeEmptyWorkspaceAfter $ switchProjectPrompt myPromptTheme)
+          , ("M-S-`", shiftToProjectPrompt myPromptTheme)
+          ] ++
+          [ ("M-" ++ m ++ k, g $ DO.withNthWorkspace f i)
+          | (i, k) <- zip [0..] wsKeys
+          , (f, g, m) <- [ (W.greedyView, removeEmptyWorkspaceAfter, "")
+                         , (W.shift, id, "S-")]
+          ] ++
+          [ ("M-+", removeEmptyWorkspaceAfter $ DO.withNthWorkspace W.greedyView 10)
+          , ("M-S-+", DO.withNthWorkspace W.shift 10)
+          ]
 
-  -- M-w, [w]indow management
-  , ("M-w x", kill1)
-  , ("M-w r", refresh)  -- Resize viewed windows to the correct size
-  , ("M-w k", windows W.swapUp)
-  , ("M-w j", windows W.swapDown)
-  , ("M-w t", withFocused $ windows . W.sink)
-  , ("M-w m", windows W.swapMaster)
-  , ("M-w b", withFocused toggleBorder)
-  , ("M-w d", killAllOtherCopies)
-  , ("M-w c a", windows copyToAll)
+-- Quit (M-q)
+quitKeymap =
+  [ ("q",   quitXmonad) -- Quit
+  , ("r",   restartXmonad) -- Restart
+  , ("S-r", rebuildXmonad) -- Rebuild
+  , ("o",   restart "~/.xmonad/obtoxmd" True) -- Openbox
+  ]
+  where quitXmonad = confirmPrompt hotPromptTheme "quit xmonad" $ io (exitWith ExitSuccess)
+        restartXmonad = spawn "killall dzen2; xmonad --restart"
+        rebuildXmonad = spawn "killall dzen2; ~/.xmonad/build.sh; xmonad --restart"
+
+-- System (M-s)
+systemKeymap =
+  [ ("z", spawn "xscreensaver-command -lock") -- Lock screen
+  , ("s", spawn "systemctl suspend -i") -- Suspend
+  ]
+
+-- Execute (M-x)
+executeKeymap =
+  [ ("x", spawn myLauncher) -- Launcher
+  , ("t", spawn myTerminal) -- Terminal
+  , ("S-t", spawn myNixTerminal) -- Nix Terminal
+  , ("w", spawn myWebBrowser) -- Web browser
+  , ("e", spawn myEditor) -- Editor
+  , ("r", spawn myPDFReader) -- PDF reader
+  , ("f", spawn myFileBrowser) -- File browser
+  , ("p s", passPrompt myPromptTheme) -- Select password
+  , ("p g", passGeneratePrompt myPromptTheme) -- Generate password
+  ]
+
+-- Window (M-w)
+windowKeymap =
+  [ ("x", kill1) -- Close
+  , ("r", refresh) -- Reset size
+  , ("k", windows W.swapUp)
+  , ("j", windows W.swapDown)
+  , ("t", withFocused $ windows . W.sink)
+  , ("m", windows W.swapMaster)
+  , ("b", withFocused toggleBorder) -- Toggle border
+  , ("d", killAllOtherCopies)
+  , ("c a", windows copyToAll)
   ] ++
-  [ ("M-w c " ++ k, DO.withNthWorkspace copy i)
+  [ ("c " ++ k, DO.withNthWorkspace copy i)
   | (i, k) <- zip [0..] wsKeys
-  ] ++
+  ]
 
-  -- M-p, [p]rojects
-  [ ("M-p x", confirmPrompt hotPromptTheme "kill project" $
-      killAll >> removeWorkspace)
-  , ("M-p r", renameProjectPrompt myPromptTheme)
-  , ("M-p d", changeProjectDirPrompt myPromptTheme)
 
-  -- M-l, [l]ayout management
-  , ("M-l k", sendMessage NextLayout)
-  , ("M-l h", sendMessage Shrink)
-  , ("M-l l", sendMessage Expand)
-  , ("M-l w", sendMessage $ IncMasterN 1)
-  , ("M-l d", sendMessage $ IncMasterN (-1))
+-- Project (M-p)
+projectKeymap =
+  [ ("x", closeProject) -- Close
+  , ("r", renameProjectPrompt myPromptTheme) -- Rename
+  , ("d", changeProjectDirPrompt myPromptTheme) -- Change directory
+  ]
+  where closeProject = confirmPrompt hotPromptTheme "close project" $ killAll >> removeWorkspace
 
-  -- M-m, [m]usic
-  , ("M-m p", spawn "mpc toggle")
-  , ("<XF86AudioPlay>", spawn "mpc toggle")
-  , ("M-m j", spawn "mpc next")
-  , ("<XF86AudioNext>", spawn "mpc next")
-  , ("M-m k", spawn "mpc prev")
-  , ("<XF86AudioPrev>", spawn "mpc prev")
+-- Layout (M-l)
+layoutKeymap =
+  [ ("k", sendMessage NextLayout)
+  , ("h", sendMessage Shrink)
+  , ("l", sendMessage Expand)
+  , ("w", sendMessage $ IncMasterN 1)
+  , ("d", sendMessage $ IncMasterN (-1))
+  ]
 
-  -- M-d, [d]isplay
-  , ("M-d i", spawn "xrandr --output DP1 --off --output eDP1 --auto")
-  , ("M-d e", spawn "xrandr --output DP1 --auto --output eDP1 --off")
-  , ("M-d m", spawn "xrandr --output DP1 --auto --output eDP1 --auto")
-  , ("M-d l", spawn "xrandr --output DP1 --primary --auto --output eDP1 --left-of DP1 --auto")
-  , ("M-d r", spawn "xrandr --output DP1 --primary --auto --output eDP1 --right-of DP1 --auto")
-  , ("M-d a", spawn "xrandr --output DP1 --primary --auto --output eDP1 --above DP1 --auto")
-  , ("M-d b", spawn "xrandr --output DP1 --primary --auto --output eDP1 --below DP1 --auto")
+-- Music (M-m)
+musicKeymap =
+  [ ("p", spawn "mpc toggle") -- Play/Pause
+  , ("j", spawn "mpc next") -- Next
+  , ("k", spawn "mpc prev") -- Previous
+  ]
 
-  -- misc system
-  , ("<XF86AudioMute>",        spawn "amixer set Master toggle")
-  , ("M-<Up>",                 spawn "amixer set Master 2%+")
-  , ("<XF86AudioRaiseVolume>", spawn "amixer set Master 2%+")
-  , ("M-<Down>",               spawn "amixer set Master 2%-")
-  , ("<XF86AudioLowerVolume>", spawn "amixer set Master 2%-")
-
-  , ("M-<F7>", spawn "sleep 0.2; xset dpms force off")
-  , ("M-<F8>", spawn "trackpad-toggle.sh")
-  , ("<XF86MonBrightnessDown>", spawn "xbacklight -dec 2")
-  , ("<XF86MonBrightnessUp>",   spawn "xbacklight -inc 2")
-
-  , ("<Print>", spawn "scrot")
-  , ("C-<Print>", spawn "sleep 0.2; scrot -s")
-
-  -- toggle statusbar
-  , ("M-b", sendMessage ToggleStruts)
-
-  -- movement
-  , ("M-k", windows W.focusUp)
-  , ("M-j", windows W.focusDown)
-  , ("M-S-k", windows W.swapUp)
-  , ("M-S-j", windows W.swapDown)
-  , ("M-C-k", DO.swapWith Next NonEmptyWS)
-  , ("M-C-j", DO.swapWith Prev NonEmptyWS)
-
-  -- workspaces
-  , ("M-`", removeEmptyWorkspaceAfter $ switchProjectPrompt myPromptTheme)
-  , ("M-S-`", shiftToProjectPrompt myPromptTheme)
-  ] ++
-  [ ("M-" ++ m ++ k, g $ DO.withNthWorkspace f i)
-  | (i, k) <- zip [0..] wsKeys
-  , (f, g, m) <- [ (W.greedyView, removeEmptyWorkspaceAfter, "")
-                 , (W.shift, id, "S-")]
-  ] ++
-  [ ("M-+", removeEmptyWorkspaceAfter $ DO.withNthWorkspace W.greedyView 10)
-  , ("M-S-+", DO.withNthWorkspace W.shift 10)
+-- Display (M-d)
+displayKeymap =
+  [ ("o", spawn "mons -o")
+  , ("s", spawn "mons -s")
+  , ("d", spawn "mons -d")
+  , ("m", spawn "mons -m")
+  , ("l", spawn "mons -e left")
+  , ("r", spawn "mons -e right")
+  , ("t", spawn "mons -e top")
+  , ("b", spawn "mons -e bottom")
   ]
 
 extraKeys =
@@ -340,12 +360,6 @@ extraKeys =
   , ( (myModMask .|. shiftMask, xK_dead_acute), DO.withNthWorkspace W.shift 11)
   ]
 
-quitXmonad = io (exitWith ExitSuccess)
-restartXmonad = spawn "killall dzen2; xmonad --restart"
-rebuildXmonad = spawn "killall dzen2; ~/.xmonad/build.sh; xmonad --restart"
-
-
-    --
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
     -- mod-shift-{w,e,r}, Move client to screen 1, 2, or 3
     --
@@ -455,7 +469,7 @@ myEventHook = docksEventHook
 ------------------------------------------------------------------------
 
 myStartupHook conf = do setWMName "LG3D"
-                        return () >> checkKeymap conf (myKeymap conf)
+                        return () >> checkKeymap conf (mainKeymap conf)
 
 ------------------------------------------------------------------------
 -- Main program
